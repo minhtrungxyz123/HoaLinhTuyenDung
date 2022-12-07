@@ -11,6 +11,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\TuyenDung.Data\TuyenDung.Data.csproj" />
+	  <ProjectReference Include="..\TuyenDung.ModelName\TuyenDung.ModelName.csproj" />
 	</ItemGroup>
 
 </Project>
