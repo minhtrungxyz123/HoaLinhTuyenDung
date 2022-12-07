@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Autofac" Version="6.4.0" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="FastMember" Version="1.5.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TuyenDung.Base\TuyenDung.Base.csproj" />
+	  <ProjectReference Include="..\TuyenDung.Common\TuyenDung.Common.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Kendo.Mvc">
+	    <HintPath>..\..\hoalinh.sharedrefs\Assemblies\Kendo.Mvc\Kendo.Mvc.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+</Project>
