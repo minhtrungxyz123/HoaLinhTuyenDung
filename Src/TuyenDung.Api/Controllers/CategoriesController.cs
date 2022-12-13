@@ -1,168 +1,150 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TuyenDung.Common.XBaseModel;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TuyenDung.Common.Extensions;
+using TuyenDung.Data.EF;
+using TuyenDung.Data.Entities;
 using TuyenDung.Model;
-using TuyenDung.Service;
 
 namespace TuyenDung.Api.Controllers
 {
     public class CategoriesController : BaseController
     {
-        private readonly ICategoryService _categoryService;
+        private readonly TuyenDungDbContext _context;
 
-        public CategoriesController(ICategoryService categoryService)
+        public CategoriesController(TuyenDungDbContext context)
         {
-            _categoryService = categoryService;
+            _context = context;
         }
 
-        #region List
-
-        [HttpGet("get-all")]
-        public async Task<ActionResult> GetAll()
+        [HttpPost]
+        public async Task<IActionResult> PostCategory([FromBody] CategoryModel request)
         {
-            var entity = await _categoryService.GetAll();
-            return Ok(new XBaseResult
+            var category = new Category()
             {
-                success = true,
-                data = entity
-            });
-        }
-
-        [Route("get")]
-        [HttpGet]
-        public IActionResult Get([FromQuery] CategorySearchModel searchModel)
-        {
-            var searchContext = new CategorySearchContext
-            {
-                Keywords = searchModel.Keywords,
-                PageIndex = searchModel.PageIndex - 1,
-                PageSize = searchModel.PageSize,
+                Name = request.Name,
+                ParentId = request.ParentId,
+                SortOrder = request.SortOrder,
+                SeoAlias = request.SeoAlias,
+                SeoDescription = request.SeoDescription
             };
+            _context.Categories.Add(category);
+            var result = await _context.SaveChangesAsync();
 
-            var entities = _categoryService.GetPaging(searchContext);
-            return Ok(new XBaseResult
+            if (result > 0)
             {
-                success = true,
-                data = entities,
-                totalCount = entities.TotalCount
-            });
+                return CreatedAtAction(nameof(GetById), new { id = category.Id }, request);
+            }
+            else
+            {
+                return BadRequest(new ApiBadRequestResponse("Create category failed"));
+            }
         }
 
-        [Route("create")]
         [HttpGet]
-        public IActionResult Create()
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCategories()
         {
-            var model = new CategoryModel();
+            var categorys = await _context.Categories.ToListAsync();
 
-            return Ok(new XBaseResult
-            {
-                data = model
-            });
+            var categoryVms = categorys.Select(c => CreateCategoryVm(c)).ToList();
+
+            return Ok(categoryVms);
         }
 
-        [Route("get-by-id")]
-        [HttpGet]
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetCategoriesPaging(string filter, int pageIndex, int pageSize)
+        {
+            var query = _context.Categories.AsQueryable();
+            if (!string.IsNullOrEmpty(filter))
+            {
+                query = query.Where(x => x.Name.Contains(filter)
+                || x.Name.Contains(filter));
+            }
+            var totalRecords = await query.CountAsync();
+            var items = await query.Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize).ToListAsync();
+
+            var data = items.Select(c => CreateCategoryVm(c)).ToList();
+
+            var pagination = new Pagination<CategoryModel>
+            {
+                Items = data,
+                TotalRecords = totalRecords,
+            };
+            return Ok(pagination);
+        }
+
+        [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            var role = await _categoryService.GetById(id);
-            if (role == null)
-            {
-                return NotFound(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Dữ liệu không tồn tại")
-                });
-            }
-            return Ok(new XBaseResult
-            {
-                success = true,
-                data = role
-            });
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+                return NotFound(new ApiNotFoundResponse($"Category with id: {id} is not found"));
+
+            CategoryModel categoryvm = CreateCategoryVm(category);
+
+            return Ok(categoryvm);
         }
 
-        #endregion List
-
-        #region Method
-
-        [Route("create")]
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CategoryModel entity)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCategory(int id, [FromBody] CategoryModel request)
         {
-            var result = await _categoryService.InsertAsync(entity);
-            if (result > 0)
-            {
-                return Ok(new XBaseResult
-                {
-                    success = true,
-                    data = result,
-                    message = string.Format(
-                    "Thêm thành công")
-                });
-            }
-            else
-            {
-                return BadRequest(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Thêm không thành công")
-                });
-            }
-        }
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+                return NotFound(new ApiNotFoundResponse($"Category with id: {id} is not found"));
 
-        [Route("edit")]
-        [HttpPost]
-        public async Task<IActionResult> Edit([FromBody] CategoryModel model)
-        {
-            var item = await _categoryService.GetById(model.Id);
-            if (item == null)
-                return NotFound(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Dữ liệu không tồn tại")
-                });
+            if (id == request.ParentId)
+            {
+                return BadRequest(new ApiBadRequestResponse("Category cannot be a child itself."));
+            }
 
-            var result = await _categoryService.UpdateAsync(model);
+            category.Name = request.Name;
+            category.ParentId = request.ParentId;
+            category.SortOrder = request.SortOrder;
+            category.SeoDescription = request.SeoDescription;
+            category.SeoAlias = request.SeoAlias;
+
+            _context.Categories.Update(category);
+            var result = await _context.SaveChangesAsync();
 
             if (result > 0)
             {
-                return Ok(new XBaseResult
-                {
-                    success = true,
-                    message = string.Format("Sửa thành công"),
-                    data = result
-                });
+                return NoContent();
             }
-            else
-            {
-                return BadRequest(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Sửa thất bại")
-                });
-            }
+            return BadRequest(new ApiBadRequestResponse("Update category failed"));
         }
 
-        [Route("deletes")]
-        [HttpPost]
-        public async Task<IActionResult> Deletes(IEnumerable<int> ids)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCategory(int id)
         {
-            if (ids == null || !ids.Any())
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+                return NotFound(new ApiNotFoundResponse($"Category with id: {id} is not found"));
+
+            _context.Categories.Remove(category);
+            var result = await _context.SaveChangesAsync();
+            if (result > 0)
             {
-                return Ok(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Xoá thất bại!")
-                });
+                CategoryModel categoryvm = CreateCategoryVm(category);
+                return Ok(categoryvm);
             }
-
-            await _categoryService.DeletesAsync(ids);
-
-            return Ok(new XBaseResult
-            {
-                success = true,
-                message = string.Format("Xóa thành công!")
-            });
+            return BadRequest();
         }
 
-        #endregion Method
+        private static CategoryModel CreateCategoryVm(Category category)
+        {
+            return new CategoryModel()
+            {
+                Id = category.Id,
+                Name = category.Name,
+                SortOrder = category.SortOrder,
+                ParentId = category.ParentId,
+                NumberOfTickets = category.NumberOfTickets,
+                SeoDescription = category.SeoDescription,
+                SeoAlias = category.SeoAlias
+            };
+        }
     }
 }

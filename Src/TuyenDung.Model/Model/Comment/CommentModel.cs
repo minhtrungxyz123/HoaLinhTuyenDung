@@ -1,4 +1,6 @@
-﻿namespace TuyenDung.Model
+﻿using TuyenDung.Common.Extensions;
+
+namespace TuyenDung.Model
 {
     public class CommentModel
     {
@@ -9,5 +11,9 @@
         public DateTime CreateDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
         public int? ReplyId { get; set; }
+        public string? OwnerName { get; set; }
+        public string? KnowledgeBaseTitle { get; set; }
+        public string? KnowledgeBaseSeoAlias { get; set; }
+        public Pagination<CommentModel>? Children { get; set; } = new Pagination<CommentModel>();
     }
 }

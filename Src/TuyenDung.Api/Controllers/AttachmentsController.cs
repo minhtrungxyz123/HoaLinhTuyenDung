@@ -1,58 +1,59 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TuyenDung.Common.XBaseModel;
-using TuyenDung.Service;
+using Microsoft.EntityFrameworkCore;
+using TuyenDung.Common.Extensions;
+using TuyenDung.Data.EF;
+using TuyenDung.Model;
 
 namespace TuyenDung.Api.Controllers
 {
     public class AttachmentsController : BaseController
     {
-        private readonly IAttachmentsService _attachmentsService;
+        private readonly TuyenDungDbContext _context;
 
-        public AttachmentsController(IAttachmentsService attachmentsService)
+        public AttachmentsController(TuyenDungDbContext context)
         {
-            _attachmentsService = attachmentsService;
+            _context = context;
         }
 
-        [Route("get-by-id")]
-        [HttpGet]
-        public async Task<IActionResult> GetById(int id)
+        #region Attachments
+
+        [HttpGet("{knowledgeBaseId}/attachments")]
+        public async Task<IActionResult> GetAttachment(int knowledgeBaseId)
         {
-            var entity = await _attachmentsService.GetById(id);
-            if (entity == null)
-            {
-                return NotFound(new XBaseResult
+            var query = await _context.Attachments
+                .Where(x => x.KnowledgeBaseId == knowledgeBaseId)
+                .Select(c => new AttachmentModel()
                 {
-                    success = false,
-                    message = string.Format("Dữ liệu không tồn tại")
-                });
-            }
-            return Ok(new XBaseResult
-            {
-                success = true,
-                data = entity
-            });
+                    Id = c.Id,
+                    LastModifiedDate = c.LastModifiedDate,
+                    CreateDate = c.CreateDate,
+                    FileName = c.FileName,
+                    FilePath = c.FilePath,
+                    FileSize = c.FileSize,
+                    FileType = c.FileType,
+                    KnowledgeBaseId = c.KnowledgeBaseId
+                }).ToListAsync();
+
+            return Ok(query);
         }
 
-        [Route("deletes")]
-        [HttpPost]
-        public async Task<IActionResult> Deletes(IEnumerable<int> ids)
+        [HttpDelete("{knowledgeBaseId}/attachments/{attachmentId}")]
+        public async Task<IActionResult> DeleteAttachment(int attachmentId)
         {
-            if (ids == null || !ids.Any())
+            var attachment = await _context.Attachments.FindAsync(attachmentId);
+            if (attachment == null)
+                return BadRequest(new ApiBadRequestResponse($"Cannot found attachment with id {attachmentId}"));
+
+            _context.Attachments.Remove(attachment);
+
+            var result = await _context.SaveChangesAsync();
+            if (result > 0)
             {
-                return Ok(new XBaseResult
-                {
-                    success = false,
-                    message = string.Format("Xoá thất bại!")
-                });
+                return Ok();
             }
-
-            await _attachmentsService.DeletesAsync(ids);
-
-            return Ok(new XBaseResult
-            {
-                success = true,
-                message = string.Format("Xóa thành công!")
-            });
+            return BadRequest(new ApiBadRequestResponse($"Delete attachment failed"));
         }
+
+        #endregion Attachments
     }
 }

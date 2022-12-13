@@ -28,8 +28,6 @@ builder.Services.AddTransient<SignInManager<User>, SignInManager<User>>();
 builder.Services.AddTransient<RoleManager<Role>, RoleManager<Role>>();
 
 builder.Services.AddScoped<IAuthencateService, AuthencateService>();
-builder.Services.AddScoped<IAttachmentsService, AttachmentsService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 #region
 

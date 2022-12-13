@@ -8,7 +8,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TuyenDung.Common.Extensions;
-using TuyenDung.Common.XBaseModel;
 using TuyenDung.Data.EF;
 using TuyenDung.Data.Entities;
 using TuyenDung.Model;

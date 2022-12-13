@@ -1,4 +1,4 @@
-﻿using TuyenDung.Common.XBaseModel;
+﻿using TuyenDung.Common.Extensions;
 using TuyenDung.Model;
 
 namespace TuyenDung.Service
