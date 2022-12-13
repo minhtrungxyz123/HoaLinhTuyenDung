@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using TuyenDung.Api.Services;
 using TuyenDung.Common.Extensions;
 using TuyenDung.Data.Dapper;
 using TuyenDung.Data.EF;
@@ -26,6 +27,9 @@ builder.Services.AddIdentity<User, Role>()
 builder.Services.AddTransient<UserManager<User>, UserManager<User>>();
 builder.Services.AddTransient<SignInManager<User>, SignInManager<User>>();
 builder.Services.AddTransient<RoleManager<Role>, RoleManager<Role>>();
+builder.Services.AddTransient<IOneSignalService, OneSignalService>();
+builder.Services.AddTransient<IStorageService, FileStorageService>();
+builder.Services.AddTransient<ISequenceService, SequenceService>();
 
 builder.Services.AddScoped<IAuthencateService, AuthencateService>();
 

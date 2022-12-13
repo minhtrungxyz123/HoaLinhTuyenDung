@@ -15,6 +15,7 @@ namespace TuyenDung.Data.Entities
 
         [Required]
         public DateTime Dob { get; set; }
-
+        public DateTime CreateDate { get; set; }
+        public DateTime? LastModifiedDate { get; set; }
     }
 }

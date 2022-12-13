@@ -36,6 +36,8 @@ namespace TuyenDung.Data.EF
             modelBuilder.ApplyConfiguration(new PermissionConfiguraton());
             modelBuilder.ApplyConfiguration(new ReportConfiguration());
             modelBuilder.ApplyConfiguration(new VoteConfiguration());
+
+            modelBuilder.HasSequence("TuyenDungSequence");
         }
 
         public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default(CancellationToken))

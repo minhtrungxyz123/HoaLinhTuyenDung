@@ -1,4 +1,6 @@
-﻿namespace TuyenDung.Model
+﻿using Microsoft.AspNetCore.Http;
+
+namespace TuyenDung.Model
 {
     public class KnowledgeBasisModel
     {
@@ -14,12 +16,15 @@
         public string? Workaround { get; set; }
         public string? Note { get; set; }
         public string OwnerUserId { get; set; } = null!;
-        public string? Labels { get; set; }
+        public string[] Labels { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
         public int? NumberOfComments { get; set; }
         public int? NumberOfVotes { get; set; }
         public int? NumberOfReports { get; set; }
         public int? ViewCount { get; set; }
+        public List<AttachmentModel> Attachments { set; get; }
+        public string? CategoryAlias { get; set; }
+        public string? CategoryName { get; set; }
     }
 }
